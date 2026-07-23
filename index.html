@@ -653,19 +653,20 @@ body{font-family:var(--sans);background:var(--oscuro);color:var(--blanco);overfl
         <div class="form-title">Solicita informaci&oacute;n</div>
         <div class="form-sub">Completa tus datos y un asesor te contactar&aacute; en menos de 24 horas.</div>
         <div class="form-row">
-          <div class="fg"><label>Nombre</label><input type="text" placeholder="Tu nombre completo"></div>
-          <div class="fg"><label>Tel&eacute;fono</label><input type="tel" placeholder="+52 81 XXXX XXXX"></div>
+          <div class="fg"><label>Nombre</label><input type="text" id="leadNombre" placeholder="Tu nombre completo"></div>
+          <div class="fg"><label>Tel&eacute;fono</label><input type="tel" id="leadTelefono" placeholder="+52 81 XXXX XXXX"></div>
         </div>
-        <div class="fg"><label>Correo electr&oacute;nico</label><input type="email" placeholder="tu@email.com"></div>
+        <div class="fg"><label>Correo electr&oacute;nico</label><input type="email" id="leadCorreo" placeholder="tu@email.com"></div>
         <div class="form-row">
           <div class="fg"><label>Tipolog&iacute;a de inter&eacute;s</label>
-            <select><option value="">Selecciona</option><option>Height Suite &middot; 127 m&sup2;</option><option>Honor Home &middot; 183 m&sup2;</option><option>Heritage Penthouse &middot; 337 m&sup2;</option><option>Oficina</option><option>Local Comercial</option></select>
+            <select id="leadTipologia"><option value="">Selecciona</option><option>Height Suite &middot; 127 m&sup2;</option><option>Honor Home &middot; 183 m&sup2;</option><option>Heritage Penthouse &middot; 337 m&sup2;</option><option>Oficina</option><option>Local Comercial</option></select>
           </div>
           <div class="fg"><label>Horizonte de compra</label>
-            <select><option value="">Selecciona</option><option>Inmediatamente</option><option>En 3 a 6 meses</option><option>En 6 a 12 meses</option><option>Solo explorando</option></select>
+            <select id="leadHorizonte"><option value="">Selecciona</option><option>Inmediatamente</option><option>En 3 a 6 meses</option><option>En 6 a 12 meses</option><option>Solo explorando</option></select>
           </div>
         </div>
-        <button class="btn-submit">Solicitar Presentaci&oacute;n Privada</button>
+        <button class="btn-submit" id="btnLeadSubmit" onclick="enviarLead()">Solicitar Presentaci&oacute;n Privada</button>
+        <div id="leadMsg" style="margin-top:12px;font-size:12px;text-align:center"></div>
       </div>
     </div>
   </div>
@@ -697,7 +698,50 @@ function go(id) {
   window.scrollTo({top:0,behavior:"smooth"});
 }
 </script>
-<script type="module">
-  </script>
+<script>
+function enviarLead() {
+  var nombre = document.getElementById('leadNombre').value.trim();
+  var telefono = document.getElementById('leadTelefono').value.trim();
+  var correo = document.getElementById('leadCorreo').value.trim();
+  var tipologia = document.getElementById('leadTipologia').value;
+  var horizonte = document.getElementById('leadHorizonte').value;
+  var msg = document.getElementById('leadMsg');
+  var btn = document.getElementById('btnLeadSubmit');
+
+  if (!nombre || !telefono || !correo) {
+    msg.style.color = '#e07a5f';
+    msg.textContent = 'Por favor completa nombre, teléfono y correo.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  msg.textContent = '';
+
+  fetch('https://fleal94.app.n8n.cloud/webhook/honos-lead', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nombre: nombre, telefono: telefono, correo: correo, tipologia: tipologia, horizonte: horizonte })
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error('fail');
+    msg.style.color = '#B78D6D';
+    msg.textContent = '¡Gracias! Un asesor te contactará pronto.';
+    document.getElementById('leadNombre').value = '';
+    document.getElementById('leadTelefono').value = '';
+    document.getElementById('leadCorreo').value = '';
+    document.getElementById('leadTipologia').value = '';
+    document.getElementById('leadHorizonte').value = '';
+  })
+  .catch(function() {
+    msg.style.color = '#e07a5f';
+    msg.textContent = 'Hubo un error. Intenta de nuevo o llámanos al 811 555 7252.';
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'Solicitar Presentación Privada';
+  });
+}
+</script>
 </body>
 </html>
